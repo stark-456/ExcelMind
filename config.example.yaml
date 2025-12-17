@@ -1,0 +1,28 @@
+# 模型配置
+model:
+  # 模型提供商: openai (兼容 OpenAI API 的服务都可以)
+  provider: "openai"
+  # 模型名称
+  model_name: "gpt-4"
+  # API Key - 直接填写，或使用环境变量格式 ${OPENAI_API_KEY}
+  api_key: "${OPENAI_API_KEY}"
+  # 自定义 API 端点 - 直接填写，或使用环境变量格式 ${OPENAI_BASE_URL}
+  base_url: "${OPENAI_BASE_URL}"
+  # 温度参数
+  temperature: 0.1
+  # 最大输出 token
+  max_tokens: 4096
+
+# Excel 配置
+excel:
+  # 预览时显示的最大行数
+  max_preview_rows: 20
+  # 工具返回结果的默认行数限制
+  default_result_limit: 20
+  # 最大结果行数限制
+  max_result_limit: 1000
+
+# 服务配置
+server:
+  host: "0.0.0.0"
+  port: 8000
