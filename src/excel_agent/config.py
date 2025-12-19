@@ -32,11 +32,31 @@ class ServerConfig(BaseModel):
     port: int = 8000
 
 
+class EmbeddingConfig(BaseModel):
+    """Embedding 模型配置"""
+    model: str = "qwen3-embedding-0.6b"
+    dims: int = 1536
+    api_url: str = "http://10.62.36.7:13206/member1/qwen3-embedding/v1"
+    api_key: str = "empty"
+
+
+class KnowledgeBaseConfig(BaseModel):
+    """知识库配置"""
+    enabled: bool = True
+    knowledge_dir: str = "knowledge"  # 知识条目目录
+    vector_db_path: str = ".vector_db"  # 向量库持久化路径
+    top_k: int = 3  # 检索返回条数
+    similarity_threshold: float = 0.7  # 相似度阈值
+    auto_extract_metadata: bool = True  # 是否自动提取元数据
+
+
 class AppConfig(BaseModel):
     """应用配置"""
     model: ModelConfig = Field(default_factory=ModelConfig)
     excel: ExcelConfig = Field(default_factory=ExcelConfig)
     server: ServerConfig = Field(default_factory=ServerConfig)
+    embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig)
+    knowledge_base: KnowledgeBaseConfig = Field(default_factory=KnowledgeBaseConfig)
 
 
 def _expand_env_vars(value: str) -> str:

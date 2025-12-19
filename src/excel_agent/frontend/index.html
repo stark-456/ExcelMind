@@ -1133,6 +1133,264 @@
                 transform: scale(1);
             }
         }
+
+        /* Right Sidebar: Knowledge Base */
+        .right-sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            height: 100vh;
+            padding: 16px;
+        }
+
+        .knowledge-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 0 4px;
+        }
+
+        .knowledge-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .knowledge-count {
+            background: var(--success);
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        .knowledge-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .kb-btn-small {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .kb-btn-small:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .knowledge-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+            flex: 1;
+            margin-top: 8px;
+        }
+
+        .knowledge-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 10px;
+        }
+
+        .knowledge-item:hover {
+            background: var(--bg-hover);
+            border-color: var(--border);
+        }
+
+        .knowledge-item.selected {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: var(--success);
+        }
+
+        .knowledge-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .knowledge-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .knowledge-name {
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .knowledge-meta {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .knowledge-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .knowledge-tag {
+            font-size: 0.6rem;
+            padding: 1px 6px;
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent);
+            border-radius: 4px;
+        }
+
+        .knowledge-delete {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            opacity: 0;
+        }
+
+        .knowledge-item:hover .knowledge-delete {
+            opacity: 1;
+        }
+
+        .knowledge-delete:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        .knowledge-empty {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .knowledge-upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--bg-tertiary);
+            margin-top: 8px;
+        }
+
+        .knowledge-upload-zone:hover {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .knowledge-upload-zone.drag-over {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        .knowledge-upload-icon {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .knowledge-upload-text {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Knowledge Modal */
+        .kb-modal {
+            width: 550px;
+        }
+
+        .kb-modal-body {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .kb-content-preview {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+        }
+
+        .kb-content-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .kb-content-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .kb-tags-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .kb-tags-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .kb-info-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .kb-info-item {
+            flex: 1;
+        }
     </style>
 </head>
 
@@ -1218,6 +1476,53 @@
         </div>
     </div>
 
+    <!-- Knowledge Base Modal -->
+    <div class="modal-overlay" id="kb-modal">
+        <div class="modal kb-modal">
+            <div class="modal-header">
+                <h2 id="kb-modal-title">📚 知识详情</h2>
+                <button class="modal-close" id="kb-modal-close">&times;</button>
+            </div>
+            <div class="modal-body kb-modal-body">
+                <div class="form-group">
+                    <label class="form-label">标题</label>
+                    <input type="text" class="form-input" id="kb-title" placeholder="知识条目标题">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">内容</label>
+                    <textarea class="kb-content-input" id="kb-content" placeholder="输入知识内容..."></textarea>
+                </div>
+                <div class="kb-info-row">
+                    <div class="kb-info-item">
+                        <label class="form-label">分类</label>
+                        <select class="form-select" id="kb-category">
+                            <option value="general">通用</option>
+                            <option value="field_rule">字段规则</option>
+                            <option value="task_pattern">任务模式</option>
+                            <option value="business_logic">业务逻辑</option>
+                        </select>
+                    </div>
+                    <div class="kb-info-item">
+                        <label class="form-label">优先级</label>
+                        <select class="form-select" id="kb-priority">
+                            <option value="normal">普通</option>
+                            <option value="high">高</option>
+                            <option value="low">低</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签（用逗号分隔）</label>
+                    <input type="text" class="kb-tags-input" id="kb-tags" placeholder="例如：账期, 日期格式, YYYYMM">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="kb-modal-cancel">取消</button>
+                <button class="btn-confirm" id="kb-modal-save">保存</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Upload Overlay -->
     <div class="upload-overlay" id="upload-overlay">
         <div class="upload-spinner"></div>
@@ -1248,13 +1553,35 @@
                         disabled></textarea>
                     <button class="send-btn" id="send-btn" disabled>
                         <svg viewBox="0 0 24 24">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" transform="rotate(-45 12 12)" />
                         </svg>
                     </button>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- Right Sidebar: Knowledge Base -->
+    <aside class="right-sidebar">
+        <div class="knowledge-header">
+            <div class="knowledge-title">
+                📚 知识库
+                <span class="knowledge-count" id="knowledge-count">0</span>
+            </div>
+            <div class="knowledge-actions">
+                <button class="kb-btn-small" id="kb-btn-add" title="添加知识">+</button>
+                <button class="kb-btn-small" id="kb-btn-refresh" title="刷新">↻</button>
+            </div>
+        </div>
+        <div class="knowledge-list" id="knowledge-list">
+            <div class="knowledge-empty" id="knowledge-empty">暂无知识条目</div>
+        </div>
+        <div class="knowledge-upload-zone" id="kb-upload-zone">
+            <div class="knowledge-upload-icon">📄</div>
+            <p class="knowledge-upload-text">拖拽或点击上传 (.md/.txt)</p>
+        </div>
+        <input type="file" id="kb-file-input" accept=".md,.txt,.markdown" style="display:none">
+    </aside>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
@@ -2123,6 +2450,226 @@
         }
 
         checkStatus();
+
+        // ============ Knowledge Base Management ============
+
+        const kbList = document.getElementById('knowledge-list');
+        const kbCount = document.getElementById('knowledge-count');
+        const kbEmpty = document.getElementById('knowledge-empty');
+        const kbUploadZone = document.getElementById('kb-upload-zone');
+        const kbFileInput = document.getElementById('kb-file-input');
+        const kbBtnAdd = document.getElementById('kb-btn-add');
+        const kbBtnRefresh = document.getElementById('kb-btn-refresh');
+        const kbModal = document.getElementById('kb-modal');
+        const kbModalTitle = document.getElementById('kb-modal-title');
+        const kbModalClose = document.getElementById('kb-modal-close');
+        const kbModalCancel = document.getElementById('kb-modal-cancel');
+        const kbModalSave = document.getElementById('kb-modal-save');
+        const kbTitleInput = document.getElementById('kb-title');
+        const kbContentInput = document.getElementById('kb-content');
+        const kbCategorySelect = document.getElementById('kb-category');
+        const kbPrioritySelect = document.getElementById('kb-priority');
+        const kbTagsInput = document.getElementById('kb-tags');
+
+        let knowledgeEntries = [];
+        let currentKbEditId = null;
+
+        // Upload handlers for knowledge files
+        kbUploadZone.addEventListener('click', () => kbFileInput.click());
+        kbUploadZone.addEventListener('dragover', (e) => { e.preventDefault(); kbUploadZone.classList.add('drag-over'); });
+        kbUploadZone.addEventListener('dragleave', () => kbUploadZone.classList.remove('drag-over'));
+        kbUploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            kbUploadZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) handleKbFiles(e.dataTransfer.files);
+        });
+        kbFileInput.addEventListener('change', (e) => { if (e.target.files.length > 0) handleKbFiles(e.target.files); });
+
+        // Button handlers
+        kbBtnAdd.addEventListener('click', () => openKbModal());
+        kbBtnRefresh.addEventListener('click', () => loadKnowledgeEntries());
+        kbModalClose.addEventListener('click', () => closeKbModal());
+        kbModalCancel.addEventListener('click', () => closeKbModal());
+        kbModalSave.addEventListener('click', () => saveKnowledgeEntry());
+
+        async function handleKbFiles(files) {
+            const validFiles = Array.from(files).filter(f => {
+                const ext = '.' + f.name.split('.').pop().toLowerCase();
+                return ['.md', '.txt', '.markdown'].includes(ext);
+            });
+
+            if (validFiles.length === 0) {
+                alert('仅支持 .md, .txt, .markdown 文件');
+                return;
+            }
+
+            for (const file of validFiles) {
+                await uploadKbFile(file);
+            }
+            loadKnowledgeEntries();
+        }
+
+        async function uploadKbFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const response = await fetch('/knowledge/upload', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error((await response.json()).detail || '上传失败');
+                const data = await response.json();
+                if (data.success) {
+                    console.log('知识文件上传成功:', data.title);
+                }
+            } catch (error) {
+                alert('上传失败: ' + error.message);
+            }
+        }
+
+        async function loadKnowledgeEntries() {
+            try {
+                const response = await fetch('/knowledge');
+                const data = await response.json();
+                if (data.entries) {
+                    knowledgeEntries = data.entries;
+                    renderKnowledgeList();
+                }
+            } catch (error) {
+                console.error('加载知识库失败:', error);
+            }
+        }
+
+        function renderKnowledgeList() {
+            kbCount.textContent = knowledgeEntries.length;
+
+            if (knowledgeEntries.length === 0) {
+                kbList.innerHTML = '<div class="knowledge-empty">暂无知识条目</div>';
+                return;
+            }
+
+            kbList.innerHTML = knowledgeEntries.map(entry => {
+                const categoryLabel = {
+                    'general': '通用',
+                    'field_rule': '字段',
+                    'task_pattern': '任务',
+                    'business_logic': '业务'
+                }[entry.category] || entry.category;
+
+                const tagsHtml = (entry.tags || [])
+                    .filter(t => t && t.trim())
+                    .slice(0, 3)
+                    .map(t => `<span class="knowledge-tag">${t}</span>`)
+                    .join('');
+
+                return `
+                    <div class="knowledge-item" data-id="${entry.id}" onclick="viewKnowledgeEntry('${entry.id}')">
+                        <span class="knowledge-icon">📄</span>
+                        <div class="knowledge-info">
+                            <div class="knowledge-name">${entry.title || '未命名'}</div>
+                            <div class="knowledge-meta">${categoryLabel}</div>
+                            ${tagsHtml ? `<div class="knowledge-tags">${tagsHtml}</div>` : ''}
+                        </div>
+                        <button class="knowledge-delete" onclick="event.stopPropagation(); deleteKnowledgeEntry('${entry.id}')" title="删除">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function viewKnowledgeEntry(id) {
+            try {
+                const response = await fetch(`/knowledge/${id}`);
+                if (!response.ok) throw new Error('获取失败');
+                const entry = await response.json();
+
+                currentKbEditId = id;
+                kbModalTitle.textContent = '📝 编辑知识';
+                kbTitleInput.value = entry.title || '';
+                kbContentInput.value = entry.content || '';
+                kbCategorySelect.value = entry.category || 'general';
+                kbPrioritySelect.value = entry.priority || 'normal';
+                kbTagsInput.value = (entry.tags || []).join(', ');
+
+                kbModal.classList.add('show');
+            } catch (error) {
+                alert('获取知识详情失败: ' + error.message);
+            }
+        }
+
+        function openKbModal() {
+            currentKbEditId = null;
+            kbModalTitle.textContent = '📚 添加知识';
+            kbTitleInput.value = '';
+            kbContentInput.value = '';
+            kbCategorySelect.value = 'general';
+            kbPrioritySelect.value = 'normal';
+            kbTagsInput.value = '';
+            kbModal.classList.add('show');
+        }
+
+        function closeKbModal() {
+            kbModal.classList.remove('show');
+            currentKbEditId = null;
+        }
+
+        async function saveKnowledgeEntry() {
+            const content = kbContentInput.value.trim();
+            if (!content) {
+                alert('请输入知识内容');
+                return;
+            }
+
+            const tags = kbTagsInput.value.split(',').map(t => t.trim()).filter(t => t);
+            const data = {
+                content: content,
+                title: kbTitleInput.value.trim() || null,
+                category: kbCategorySelect.value,
+                priority: kbPrioritySelect.value,
+                tags: tags
+            };
+
+            try {
+                let response;
+                if (currentKbEditId) {
+                    // Update existing
+                    response = await fetch(`/knowledge/${currentKbEditId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Create new
+                    response = await fetch('/knowledge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                if (!response.ok) throw new Error((await response.json()).detail || '保存失败');
+
+                closeKbModal();
+                loadKnowledgeEntries();
+            } catch (error) {
+                alert('保存失败: ' + error.message);
+            }
+        }
+
+        async function deleteKnowledgeEntry(id) {
+            if (!confirm('确定删除此知识条目？')) return;
+
+            try {
+                const response = await fetch(`/knowledge/${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error((await response.json()).detail || '删除失败');
+                loadKnowledgeEntries();
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        // Make functions globally accessible
+        window.viewKnowledgeEntry = viewKnowledgeEntry;
+        window.deleteKnowledgeEntry = deleteKnowledgeEntry;
+
+        // Load knowledge entries on page load
+        loadKnowledgeEntries();
     </script>
 </body>
 
