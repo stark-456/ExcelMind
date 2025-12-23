@@ -26,3 +26,25 @@ excel:
 server:
   host: "0.0.0.0"
   port: 8000
+
+# Embedding 模型配置（用于知识库向量化）
+embedding:
+  model: "qwen3-embedding-0.6b"
+  dims: 1536
+  api_url: "http://10.62.36.7:13206/member1/qwen3-embedding/v1"
+  api_key: "empty"
+
+# 知识库配置
+knowledge_base:
+  # 是否启用知识库
+  enabled: true
+  # 知识条目目录
+  knowledge_dir: "knowledge"
+  # 向量库持久化路径
+  vector_db_path: ".vector_db"
+  # 检索返回条数
+  top_k: 3
+  # 相似度阈值 (0-1)
+  similarity_threshold: 0.7
+  # 是否自动提取元数据
+  auto_extract_metadata: true

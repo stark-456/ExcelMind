@@ -9,6 +9,7 @@ from langchain_openai import ChatOpenAI
 
 from .config import get_config
 from .excel_loader import get_loader
+from .knowledge_base import get_knowledge_base, format_knowledge_context
 
 from .tools import ALL_TOOLS
 
@@ -25,57 +26,54 @@ TOOLS_DESCRIPTION = """
 
 ### 工具列表：
 
-1. **filter_data** - 按条件筛选数据 (支持多条件、指定列)
+1. **filter_data** - 按条件筛选数据 (支持排序、指定列)
    - filters (list): 多条件筛选列表，每项包含 column, operator, value
    - select_columns (list): 指定返回的列名列表(可选)
+   - sort_by (string): 排序列名(可选)，可一步完成筛选+排序
+   - ascending (bool): 排序方向，true升序/false降序，默认true
    - column (string): 单条件筛选列名(可选)
    - operator (string): 比较运算符 (==, !=, >, <, >=, <=, contains, startswith, endswith)
    - value (任意类型): 比较值，支持字符串、数值、日期等
    - limit (int): 返回数量限制，默认20
-   - **提示**: 对于日期/账期等字段，如果用户输入不完整(如"202511")，建议使用 startswith 或 contains 进行前缀/模糊匹配
+   - **提示**: 需要筛选+排序时，直接用此工具一步完成，无需调用两次
 
 2. **aggregate_data** - 对列进行聚合统计 (支持筛选后聚合)
-   - column (string): 要统计的列名
-   - agg_func (string): 聚合函数 (sum, mean, count, min, max, median, std)
+   - column (string): 【必填】要统计的列名
+   - agg_func (string): 【必填】聚合函数，必须指定为: sum(求和), mean(平均), count(计数), min, max, median, std
    - filters (list): 可选的筛选条件列表，先筛选再聚合
 
 3. **group_and_aggregate** - 按列分组并聚合统计 (支持筛选)
    - group_by (string): 分组列名
    - agg_column (string): 要聚合的列名
    - agg_func (string): 聚合函数 (sum, mean, count, min, max)
-   - filters (list): 可选的筛选条件列表
+   - filters (list): 筛选条件列表。**【重要】如果用户指定了日期、地区等条件，必须在此传入，否则会统计全表数据**
    - limit (int): 返回数量限制，默认20
 
-4. **sort_data** - 按列排序数据 (支持筛选、指定列)
-   - column (string): 排序列名
-   - ascending (bool): 是否升序，默认true
-   - filters (list): 可选的筛选条件列表
-   - select_columns (list): 指定返回的列名列表
-   - limit (int): 返回数量限制，默认20
-
-5. **search_data** - 在指定列或所有列中搜索关键词
+4. **search_data** - 在指定列或所有列中搜索关键词
    - keyword (string): 搜索关键词
    - columns (list): 限制搜索的列名列表(可选)
    - select_columns (list): 指定返回的列名列表
+
    - limit (int): 返回数量限制，默认20
 
-6. **get_column_stats** - 获取列的详细统计信息 (支持筛选)
+5. **get_column_stats** - 获取列的详细统计信息 (支持筛选)
    - column (string): 列名
    - filters (list): 可选的筛选条件列表
 
-7. **get_unique_values** - 获取列的唯一值列表 (支持筛选)
+6. **get_unique_values** - 获取列的唯一值列表 (支持筛选)
    - column (string): 列名
    - filters (list): 可选的筛选条件列表
    - limit (int): 返回数量限制，默认50
 
-8. **get_data_preview** - 获取数据预览
+7. **get_data_preview** - 获取数据预览
    - n_rows (int): 预览行数，默认10
 
-9. **get_current_time** - 获取当前系统时间
+8. **get_current_time** - 获取当前系统时间
    - 无参数
 
-10. **calculate** - 执行数学计算 (支持批量)
+9. **calculate** - 执行数学计算 (支持批量)
     - expressions (list): 字符串格式的数学表达式列表，例如 ["(A+B)/C", "100*0.5"]
+
 
 ## 重要规则
 - 如果需要调用工具，只输出一个 JSON 对象，不要有其他文字
@@ -89,6 +87,9 @@ SYSTEM_PROMPT_WITH_TOOLS = """你是一个专业的 Excel 数据分析助手。
 ## 当前 Excel 信息
 {excel_summary}
 
+## 相关知识参考
+{knowledge_context}
+
 {tools_description}
 
 ## 工作原则
@@ -97,6 +98,7 @@ SYSTEM_PROMPT_WITH_TOOLS = """你是一个专业的 Excel 数据分析助手。
 3. 工具调用成功后，根据结果回答用户问题
 4. **最终回答直接给出结论和分析**，不要描述"我使用了xx工具"或"我进行了xx操作"等内部过程
 5. 回答语气友好，使用中文，并给出自己的一些数据分析建议
+6. 如果有相关知识参考，请遵循其中的规则和建议
 """
 
 
@@ -201,9 +203,23 @@ async def stream_chat(message: str, history: list = None) -> AsyncGenerator[Dict
         # 主对话
         yield {"type": "thinking", "content": "正在规划解答..."}
         
+        # 检索相关知识
+        knowledge_context = "暂无相关知识参考。"
+        kb = get_knowledge_base()
+        if kb:
+            try:
+                relevant_knowledge = kb.search(query=message)
+                if relevant_knowledge:
+                    knowledge_context = format_knowledge_context(relevant_knowledge)
+                    yield {"type": "thinking", "content": f"找到 {len(relevant_knowledge)} 条相关知识参考..."}
+            except Exception as e:
+                # 知识库检索失败不影响主流程
+                print(f"[知识库检索] 警告: {e}")
+        
         system_prompt = SYSTEM_PROMPT_WITH_TOOLS.format(
             excel_summary=excel_summary,
-            tools_description=TOOLS_DESCRIPTION
+            tools_description=TOOLS_DESCRIPTION,
+            knowledge_context=knowledge_context
         )
         
         # 构建对话上下文，包含历史记录
@@ -213,8 +229,8 @@ async def stream_chat(message: str, history: list = None) -> AsyncGenerator[Dict
         active_table_info = loader.get_active_table_info()
         current_table_name = active_table_info.filename if active_table_info else "未知表"
         
-        # 添加历史对话（包含表名标记）
-        if history:
+        # 添加历史对话（包含表名标记）- 临时禁用，每次对话只关注本次
+        if False:  # 原为 if history:
             from langchain_core.messages import AIMessage
             for h in history:
                 content = h.get("content", "")

@@ -1,4 +1,4 @@
-# Excel 智问 Agent 📊
+# ExcelMind 📊
 
 基于 LangGraph 的 **Excel 数据智能分析助手**，支持自然语言查询、多轮对话、流式输出和可视化思考过程。
 
@@ -18,10 +18,9 @@
 ### 🛠️ 丰富的数据分析工具
 | 工具 | 功能 | 特性 |
 |------|------|------|
-| `filter_data` | 条件筛选 | 支持多条件 AND、指定返回列 |
+| `filter_data` | 筛选+排序 | 支持多条件 AND、排序、指定返回列 |
 | `aggregate_data` | 聚合统计 | 支持先筛选再聚合 |
 | `group_and_aggregate` | 分组聚合 | 支持筛选后分组 |
-| `sort_data` | 排序 | 支持筛选、指定列 |
 | `search_data` | 关键词搜索 | 可限制搜索范围 |
 | `get_column_stats` | 列统计 | 支持筛选后统计 |
 | `get_unique_values` | 唯一值 | 支持筛选后获取 |
@@ -34,6 +33,13 @@
 - **智能联表**: AI 自动分析表结构，通过 `🤖 智能联表` 功能一键生成连接建议
 - **灵活连接**: 支持多字段（复合键）连接，以及 Inner/Left/Right/Outer 等多种连接方式
 - **上下文感知**: 对话时明确显示当前所在的表格上下文
+
+### 📚 本地知识库 (NEW)
+- **私有知识存储**: 存储业务规则、字段说明、操作指南等私有知识
+- **向量检索**: 基于 Chroma 向量数据库，使用 Embedding 模型进行语义检索
+- **智能召回**: 对话时自动检索相关知识，注入到 Prompt 提升回答质量
+- **Web 管理**: 右侧面板可视化管理知识条目，支持增删改查和文件上传
+- **持久化存储**: 知识向量化后自动持久化，重启不丢失
 
 ### 🦺 现代化 Web 界面
 - **侧边栏管理**: 清晰的表格列表和操作入口
@@ -161,6 +167,9 @@ Excel_Agent/
 ├── config.yaml              # 配置文件
 ├── pyproject.toml           # 项目依赖
 ├── README.md
+├── knowledge/               # 知识库文件目录
+│   └── *.md                 # Markdown 格式知识文件
+├── .vector_db/              # Chroma 向量数据库（自动生成）
 └── src/
     └── excel_agent/
         ├── __init__.py
@@ -169,6 +178,7 @@ Excel_Agent/
         ├── config.py        # 配置管理
         ├── excel_loader.py  # Excel 加载器
         ├── graph.py         # LangGraph 工作流
+        ├── knowledge_base.py # 知识库管理
         ├── prompts.py       # 提示词模板
         ├── stream.py        # 流式对话核心
         ├── tools.py         # 数据分析工具

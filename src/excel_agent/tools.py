@@ -79,9 +79,11 @@ def filter_data(
     value: Optional[Any] = None, 
     filters: Optional[List[Dict[str, Any]]] = None,
     select_columns: Optional[List[str]] = None,
+    sort_by: Optional[str] = None,
+    ascending: bool = True,
     limit: int = 20
 ) -> Dict[str, Any]:
-    """按条件筛选 Excel 数据。支持单条件或多条件（AND关系），并可指定返回列。
+    """按条件筛选 Excel 数据，支持排序。
     
     Args:
         column: 单条件筛选时的列名
@@ -89,10 +91,12 @@ def filter_data(
         value: 单条件筛选时的比较值（支持字符串、数值等任意类型）
         filters: 多条件筛选列表，每个元素为 {"column": "...", "operator": "...", "value": ...}
         select_columns: 指定返回的列名列表，为空则返回所有列
+        sort_by: 排序列名，可选
+        ascending: 排序方向，True为升序，False为降序，默认True
         limit: 返回结果数量限制，默认20
         
     Returns:
-        筛选后的数据
+        筛选后的数据（可选排序）
     """
     loader = get_loader()
     df = loader.dataframe.copy()
@@ -117,6 +121,13 @@ def filter_data(
                     final_mask &= mask
         
         result_df = df[final_mask]
+        
+        # 3. 排序（如果指定了 sort_by）
+        if sort_by:
+            if sort_by not in result_df.columns:
+                return {"error": f"排序列 '{sort_by}' 不存在，可用列: {list(result_df.columns)}"}
+            result_df = result_df.sort_values(by=sort_by, ascending=ascending)
+        
         return _df_to_result(result_df, limit, select_columns)
     except Exception as e:
         return {"error": f"筛选出错: {str(e)}"}
@@ -532,7 +543,7 @@ ALL_TOOLS = [
     filter_data,
     aggregate_data,
     group_and_aggregate,
-    sort_data,
+    # sort_data,  # 已合并到 filter_data
     search_data,
     get_column_stats,
     get_unique_values,

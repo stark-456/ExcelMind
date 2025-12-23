@@ -462,6 +462,232 @@ async def reset():
     return {"success": True, "message": "已重置 Agent 状态，所有表已清空"}
 
 
+# ============ 知识库管理 API ============
+
+from .knowledge_base import get_knowledge_base, KnowledgeItem, reset_knowledge_base
+
+
+class KnowledgeEntryCreate(BaseModel):
+    """创建知识条目请求"""
+    content: str
+    title: Optional[str] = None
+    category: Optional[str] = "general"
+    tags: Optional[List[str]] = []
+    related_columns: Optional[List[str]] = []
+    priority: Optional[str] = "normal"
+
+
+class KnowledgeEntryUpdate(BaseModel):
+    """更新知识条目请求"""
+    content: Optional[str] = None
+    title: Optional[str] = None
+    category: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
+class KnowledgeSearchRequest(BaseModel):
+    """知识检索请求"""
+    query: str
+    top_k: Optional[int] = 3
+
+
+@app.get("/knowledge")
+async def list_knowledge(limit: int = 100, offset: int = 0):
+    """获取知识条目列表"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用", "entries": []}
+    
+    entries = kb.list_entries(limit=limit, offset=offset)
+    stats = kb.get_stats()
+    return {
+        "entries": entries,
+        "total": stats["total_entries"],
+        "limit": limit,
+        "offset": offset
+    }
+
+
+@app.get("/knowledge/stats")
+async def get_knowledge_stats():
+    """获取知识库统计信息"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用"}
+    
+    return kb.get_stats()
+
+
+@app.get("/knowledge/{item_id}")
+async def get_knowledge_entry(item_id: str):
+    """获取单个知识条目"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用"}
+    
+    entry = kb.get_entry(item_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="知识条目不存在")
+    
+    return {
+        "id": entry.id,
+        "title": entry.title,
+        "content": entry.content,
+        "category": entry.category,
+        "tags": entry.tags,
+        "related_columns": entry.related_columns,
+        "priority": entry.priority,
+        "source_file": entry.source_file
+    }
+
+
+@app.post("/knowledge")
+async def create_knowledge_entry(entry: KnowledgeEntryCreate):
+    """创建知识条目"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用"}
+    
+    # 生成 ID
+    import hashlib
+    import time
+    content_hash = hashlib.md5(entry.content.encode()).hexdigest()[:8]
+    item_id = f"kb_api_{int(time.time())}_{content_hash}"
+    
+    # 自动提取标题
+    title = entry.title
+    if not title:
+        lines = entry.content.strip().split("\n")
+        title = lines[0].lstrip("#").strip()[:50] if lines else "未命名"
+    
+    item = KnowledgeItem(
+        id=item_id,
+        content=entry.content,
+        title=title,
+        category=entry.category or "general",
+        tags=entry.tags or [],
+        related_columns=entry.related_columns or [],
+        priority=entry.priority or "normal"
+    )
+    
+    kb.add_entry(item)
+    
+    return {"success": True, "id": item_id, "title": title}
+
+
+@app.put("/knowledge/{item_id}")
+async def update_knowledge_entry(item_id: str, entry: KnowledgeEntryUpdate):
+    """更新知识条目"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用"}
+    
+    success = kb.update_entry(
+        item_id=item_id,
+        content=entry.content,
+        title=entry.title,
+        category=entry.category,
+        tags=entry.tags
+    )
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="知识条目不存在")
+    
+    return {"success": True, "id": item_id}
+
+
+@app.delete("/knowledge/{item_id}")
+async def delete_knowledge_entry(item_id: str):
+    """删除知识条目"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用"}
+    
+    success = kb.delete_entry(item_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="知识条目不存在或删除失败")
+    
+    return {"success": True, "id": item_id}
+
+
+@app.post("/knowledge/search")
+async def search_knowledge(request: KnowledgeSearchRequest):
+    """检索相关知识"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用", "results": []}
+    
+    items = kb.search(query=request.query, top_k=request.top_k)
+    
+    return {
+        "query": request.query,
+        "results": [
+            {
+                "id": item.id,
+                "title": item.title,
+                "content": item.content[:200] + "..." if len(item.content) > 200 else item.content,
+                "category": item.category,
+                "tags": item.tags
+            }
+            for item in items
+        ]
+    }
+
+
+@app.post("/knowledge/upload")
+async def upload_knowledge_file(file: UploadFile = File(...)):
+    """上传知识文件（支持 .md, .txt）"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用"}
+    
+    # 验证文件类型
+    if not file.filename or not file.filename.endswith(('.md', '.txt', '.markdown')):
+        raise HTTPException(status_code=400, detail="仅支持 .md, .txt, .markdown 文件")
+    
+    # 保存文件到 knowledge 目录
+    knowledge_dir = Path(kb.kb_config.knowledge_dir)
+    knowledge_dir.mkdir(parents=True, exist_ok=True)
+    
+    file_path = knowledge_dir / file.filename
+    content = await file.read()
+    file_path.write_bytes(content)
+    
+    # 加载并索引
+    item = kb.load_from_file(file_path)
+    kb.add_entry(item)
+    
+    return {
+        "success": True,
+        "id": item.id,
+        "title": item.title,
+        "file": file.filename
+    }
+
+
+@app.post("/knowledge/index")
+async def index_knowledge_directory():
+    """索引 knowledge 目录下的所有知识文件"""
+    kb = get_knowledge_base()
+    if not kb:
+        return {"error": "知识库未启用"}
+    
+    count = kb.index_directory()
+    
+    return {
+        "success": True,
+        "indexed_count": count,
+        "message": f"成功索引 {count} 个知识文件"
+    }
+
+
+@app.post("/knowledge/reset")
+async def reset_knowledge():
+    """重置知识库"""
+    reset_knowledge_base()
+    return {"success": True, "message": "知识库已重置"}
+
+
 def run_server():
     """运行服务器"""
     import uvicorn
@@ -471,3 +697,4 @@ def run_server():
         host=config.server.host,
         port=config.server.port,
     )
+

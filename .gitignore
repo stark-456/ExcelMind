@@ -67,3 +67,6 @@ tmp/
 
 # Config with secrets (包含敏感信息的配置)
 config.yaml
+
+# Vector database (知识库向量存储)
+.vector_db/
