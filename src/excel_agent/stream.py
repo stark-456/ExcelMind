@@ -74,6 +74,18 @@ TOOLS_DESCRIPTION = """
 9. **calculate** - 执行数学计算 (支持批量)
     - expressions (list): 字符串格式的数学表达式列表，例如 ["(A+B)/C", "100*0.5"]
 
+10. **generate_chart** - 生成 ECharts 可视化图表
+    - chart_type (string): 图表类型，可选: bar(柱状图), line(折线图), pie(饼图), scatter(散点图), radar(雷达图), funnel(漏斗图)，或 "auto" 自动推荐
+    - x_column (string): X轴数据列名（柱状图/折线图必填）
+    - y_column (string): Y轴数据列名（数值列）
+    - group_by (string): 分组列名（饼图/漏斗图必填）
+    - agg_func (string): 聚合函数: sum, mean, count, min, max
+    - title (string): 图表标题
+    - filters (list): 筛选条件列表
+    - series_columns (list): 多系列Y轴列名列表（雷达图需要至少3个）
+    - limit (int): 数据点数量限制，默认20
+    - **使用场景**: 用户想要可视化数据、生成图表、绘制趋势图、展示占比等需求时使用
+
 
 ## 重要规则
 - 如果需要调用工具，只输出一个 JSON 对象，不要有其他文字

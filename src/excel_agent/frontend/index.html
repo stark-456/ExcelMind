@@ -936,6 +936,11 @@
             overflow-y: auto;
         }
 
+        .tool-result.has-chart {
+            max-height: none;
+            overflow: visible;
+        }
+
         .tool-result.success {
             border-left: 2px solid var(--success);
         }
@@ -1005,6 +1010,26 @@
             padding: 2px 6px;
             border-radius: 3px;
             font-size: 0.8rem;
+        }
+
+        /* Chart Container Styles */
+        .chart-result-container {
+            margin-top: 12px;
+        }
+
+        .chart-header {
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            min-height: 400px;
+            background: rgba(17, 24, 39, 0.6);
+            border-radius: 12px;
+            padding: 16px;
+            box-sizing: border-box;
         }
 
         /* Input Section */
@@ -1584,6 +1609,7 @@
     </aside>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
     <script>
         marked.setOptions({ breaks: true, gfm: true });
 
@@ -2237,7 +2263,8 @@
                 'get_unique_values': '获取唯一值',
                 'get_data_preview': '数据预览',
                 'get_current_time': '获取时间',
-                'calculate': '数学计算'
+                'calculate': '数学计算',
+                'generate_chart': '📊 生成图表'
             };
             return names[name] || name;
         }
@@ -2314,6 +2341,15 @@
                         return `计算表达式: ${args.expressions.map(e => `<code>${e}</code>`).join(', ')}`;
                     }
                     return '执行数学计算';
+                case 'generate_chart': {
+                    const chartTypes = { bar: '柱状图', line: '折线图', pie: '饼图', scatter: '散点图', radar: '雷达图', funnel: '漏斗图', auto: '自动推荐' };
+                    const parts = [`生成 <b>${chartTypes[args.chart_type] || args.chart_type || '自动推荐'}</b>`];
+                    if (args.title) parts.push(`标题: ${args.title}`);
+                    if (args.x_column) parts.push(`X轴: ${args.x_column}`);
+                    if (args.y_column) parts.push(`Y轴: ${args.y_column}`);
+                    if (args.group_by) parts.push(`分组: ${args.group_by}`);
+                    return parts.join(', ');
+                }
                 default:
                     return JSON.stringify(args);
             }
@@ -2338,7 +2374,8 @@
         function addToolResult(toolBlock, result) {
             const resultDiv = document.createElement('div');
             const isError = result && result.error;
-            resultDiv.className = `tool-result ${isError ? 'error' : 'success'}`;
+            const hasChart = result && result.chart;
+            resultDiv.className = `tool-result ${isError ? 'error' : 'success'}${hasChart ? ' has-chart' : ''}`;
 
             if (isError) {
                 resultDiv.innerHTML = `<strong>❌ 错误:</strong> ${result.error}`;
@@ -2353,6 +2390,29 @@
         function formatToolResult(result) {
             if (!result || typeof result !== 'object') {
                 return `<strong>✓ 结果:</strong> ${result}`;
+            }
+
+            // 处理图表结果
+            if (result.chart) {
+                const chartId = 'echart-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                const chartHtml = `
+                    <div class="chart-result-container">
+                        <div class="chart-header"><strong>📊 ${result.message || '图表已生成'}</strong></div>
+                        <div class="chart-container" id="${chartId}"></div>
+                    </div>
+                `;
+                // 延迟渲染图表，确保 DOM 已插入
+                setTimeout(() => {
+                    const container = document.getElementById(chartId);
+                    if (container && typeof echarts !== 'undefined') {
+                        const chart = echarts.init(container, 'dark');
+                        chart.setOption(result.chart);
+                        // 响应式调整
+                        const resizeObserver = new ResizeObserver(() => chart.resize());
+                        resizeObserver.observe(container);
+                    }
+                }, 100);
+                return chartHtml;
             }
 
             const parts = ['<strong>✓ 执行成功</strong>'];
