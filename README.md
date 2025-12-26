@@ -1,6 +1,6 @@
 # ExcelMind 📊
 
-基于 LangGraph 的 **Excel 数据智能分析助手**，支持自然语言查询、多轮对话、流式输出和可视化思考过程。
+基于 LangGraph 的 **Excel 数据智能分析助手**，支持自然语言查询、多轮对话、流式输出、**ECharts 图表可视化**和可视化思考过程。
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -27,6 +27,7 @@
 | `get_data_preview` | 数据预览 | 快速查看数据 |
 | `get_current_time` | 获取时间 | 处理相对时间查询 |
 | `calculate` | 数学计算 | 批量精确计算 |
+| `generate_chart` | **图表生成** | ECharts 可视化，AI 自动推荐图表类型 |
 
 ### 🔄 多表协同
 - **多表管理**: 同时上传和管理多个 Excel 表格
@@ -34,12 +35,18 @@
 - **灵活连接**: 支持多字段（复合键）连接，以及 Inner/Left/Right/Outer 等多种连接方式
 - **上下文感知**: 对话时明确显示当前所在的表格上下文
 
-### 📚 本地知识库 (NEW)
+### 📚 本地知识库
 - **私有知识存储**: 存储业务规则、字段说明、操作指南等私有知识
 - **向量检索**: 基于 Chroma 向量数据库，使用 Embedding 模型进行语义检索
 - **智能召回**: 对话时自动检索相关知识，注入到 Prompt 提升回答质量
 - **Web 管理**: 右侧面板可视化管理知识条目，支持增删改查和文件上传
 - **持久化存储**: 知识向量化后自动持久化，重启不丢失
+
+### 📈 ECharts 图表可视化 (NEW)
+- **多图表类型**: 支持柱状图、折线图、饼图、散点图、雷达图、漏斗图
+- **AI 自动推荐**: 根据数据特征智能推荐最合适的图表类型
+- **交互式图表**: 基于 ECharts 5.5，支持悬停提示、图例切换、响应式布局
+- **自然语言触发**: 直接说"帮我画个图表"或"可视化销售数据"即可生成
 
 ### 🦺 现代化 Web 界面
 - **侧边栏管理**: 清晰的表格列表和操作入口
@@ -64,8 +71,8 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/Excel_Agent.git
-cd Excel_Agent
+git clone https://github.com/stark-456/ExcelMind.git
+cd ExcelMind
 ```
 
 ### 2. 安装依赖
@@ -233,6 +240,11 @@ uv run ruff format .
 用户：西城的明细呢？
 助手：[理解上下文，调用 filter_data]
       西城分公司的详细数据如下：...
+
+用户：用饼图展示各分公司的占比
+助手：[调用 generate_chart 工具]
+      📊 已生成饼图，共 8 个数据点。
+      [交互式 ECharts 饼图显示]
 ```
 
 ## 🤝 贡献
