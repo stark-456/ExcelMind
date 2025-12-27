@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from datetime import datetime, date
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,6 +19,33 @@ from .stream import stream_chat
 
 import tempfile
 import os
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    """自定义 JSON 编码器，处理 Pandas/Numpy 类型"""
+    
+    def default(self, obj):
+        # 处理 Pandas Timestamp
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        # 处理 numpy 类型
+        if hasattr(obj, 'item'):
+            return obj.item()
+        # 处理 numpy 数组
+        if hasattr(obj, 'tolist'):
+            return obj.tolist()
+        # 处理 pandas NaT
+        if str(obj) == 'NaT':
+            return None
+        # 处理 pandas NA
+        if str(obj) == '<NA>':
+            return None
+        return super().default(obj)
+
+
+def json_dumps(obj, **kwargs):
+    """使用自定义编码器的 JSON 序列化函数"""
+    return json.dumps(obj, cls=CustomJSONEncoder, **kwargs)
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -439,10 +467,10 @@ async def chat_stream(request: ChatRequest):
     
     async def generate():
         # 先发送表ID信息
-        yield f"data: {json.dumps({'type': 'table_info', 'table_id': active_table_id}, ensure_ascii=False)}\n\n"
+        yield f"data: {json_dumps({'type': 'table_info', 'table_id': active_table_id}, ensure_ascii=False)}\n\n"
         
         async for event in stream_chat(request.message, request.history):
-            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+            yield f"data: {json_dumps(event, ensure_ascii=False)}\n\n"
     
     return StreamingResponse(
         generate(),

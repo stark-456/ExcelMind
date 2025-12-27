@@ -1,17 +1,42 @@
-# 模型配置
+# 模型配置 - 多渠道支持
 model:
-  # 模型提供商: openai (兼容 OpenAI API 的服务都可以)
-  provider: "openai"
-  # 模型名称
-  model_name: "gpt-4"
-  # API Key - 直接填写，或使用环境变量格式 ${OPENAI_API_KEY}
-  api_key: "${OPENAI_API_KEY}"
-  # 自定义 API 端点 - 直接填写，或使用环境变量格式 ${OPENAI_BASE_URL}
-  base_url: "${OPENAI_BASE_URL}"
-  # 温度参数
-  temperature: 0.1
-  # 最大输出 token
-  max_tokens: 4096
+  # ========================================
+  # 快速切换：修改此处即可切换不同的 LLM 服务
+  # 可选值: self_hosted, x666, siliconflow
+  # ========================================
+  active: "self_hosted"
+  
+  # 多个服务提供者配置
+  providers:
+    # 自建服务 (例如: 本地部署的 vLLM/Ollama/TGI 等)
+    self_hosted:
+      description: "自建服务 - Qwen3-80B"
+      provider: "openai"
+      model_name: "qwen3-80b"
+      api_key: "${SELF_HOSTED_API_KEY}"
+      base_url: "${SELF_HOSTED_BASE_URL}"
+      temperature: 0.1
+      max_tokens: 4096
+    
+    # x666 服务
+    x666:
+      description: "x666 服务 - GLM4"
+      provider: "openai"
+      model_name: "glm4"
+      api_key: "${X666_API_KEY}"
+      base_url: "${X666_BASE_URL}"
+      temperature: 0.1
+      max_tokens: 4096
+    
+    # 硅基流动 SiliconFlow
+    siliconflow:
+      description: "硅基流动 - GLM-4.7 Pro"
+      provider: "openai"
+      model_name: "Pro/zai-org/GLM-4.7"
+      api_key: "${SILICONFLOW_API_KEY}"
+      base_url: "https://api.siliconflow.cn/v1"
+      temperature: 0.1
+      max_tokens: 4096
 
 # Excel 配置
 excel:
@@ -27,12 +52,32 @@ server:
   host: "0.0.0.0"
   port: 8000
 
-# Embedding 模型配置（用于知识库向量化）
+# Embedding 模型配置（用于知识库向量化）- 多渠道支持
 embedding:
-  model: "qwen3-embedding-0.6b"
-  dims: 1536
-  api_url: "http://10.62.36.7:13206/member1/qwen3-embedding/v1"
-  api_key: "empty"
+  # ========================================
+  # 快速切换：修改此处即可切换不同的 Embedding 服务
+  # 可选值: self_hosted, siliconflow
+  # ⚠️ 注意：不同维度的向量不兼容，切换后需重建知识库索引！
+  # ========================================
+  active: "self_hosted"
+  
+  # 多个 Embedding 服务配置
+  providers:
+    # 自建服务 (1536维)
+    self_hosted:
+      description: "自建服务 - Qwen3-Embedding-0.6B (1536维)"
+      model: "qwen3-embedding-0.6b"
+      dims: 1536
+      api_url: "${SELF_HOSTED_EMBEDDING_URL}"
+      api_key: "empty"
+    
+    # 硅基流动 (1024维)
+    siliconflow:
+      description: "硅基流动 - Qwen3-Embedding-0.6B (1024维)"
+      model: "Qwen/Qwen3-Embedding-0.6B"
+      dims: 1024
+      api_url: "https://api.siliconflow.cn/v1"
+      api_key: "${SILICONFLOW_API_KEY}"
 
 # 知识库配置
 knowledge_base:

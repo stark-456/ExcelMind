@@ -3,20 +3,62 @@
 import os
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 import yaml
 from pydantic import BaseModel, Field
 
 
-class ModelConfig(BaseModel):
-    """模型配置"""
+class ProviderConfig(BaseModel):
+    """单个模型提供者配置"""
     provider: str = "openai"
-    model_name: str = "qwen3-80b"
+    model_name: str = "gpt-4"
     api_key: str = ""
     base_url: Optional[str] = None
     temperature: float = 0.1
     max_tokens: int = 4096
+    description: Optional[str] = None  # 可选的渠道描述
+
+
+class ModelConfig(BaseModel):
+    """模型配置 - 支持多渠道切换"""
+    # 当前激活的渠道名称
+    active: str = "default"
+    # 多个渠道配置
+    providers: Dict[str, ProviderConfig] = Field(default_factory=lambda: {
+        "default": ProviderConfig()
+    })
+    
+    # 向后兼容的单一配置字段 (用于旧配置格式)
+    provider: Optional[str] = None
+    model_name: Optional[str] = None
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    
+    def get_active_provider(self) -> ProviderConfig:
+        """获取当前激活的提供者配置"""
+        # 如果使用新的 providers 格式
+        if self.providers and self.active in self.providers:
+            return self.providers[self.active]
+        
+        # 向后兼容：如果使用旧格式，构建一个 ProviderConfig
+        return ProviderConfig(
+            provider=self.provider or "openai",
+            model_name=self.model_name or "gpt-4",
+            api_key=self.api_key or "",
+            base_url=self.base_url,
+            temperature=self.temperature or 0.1,
+            max_tokens=self.max_tokens or 4096
+        )
+    
+    def list_providers(self) -> Dict[str, str]:
+        """列出所有可用的渠道及其描述"""
+        return {
+            name: config.description or f"{config.provider}/{config.model_name}"
+            for name, config in self.providers.items()
+        }
 
 
 class ExcelConfig(BaseModel):
@@ -32,12 +74,50 @@ class ServerConfig(BaseModel):
     port: int = 8000
 
 
-class EmbeddingConfig(BaseModel):
-    """Embedding 模型配置"""
+class EmbeddingProviderConfig(BaseModel):
+    """单个 Embedding 提供者配置"""
     model: str = "qwen3-embedding-0.6b"
-    dims: int = 1536
-    api_url: str = "http://10.62.36.7:13206/member1/qwen3-embedding/v1"
+    dims: int = 1536  # 向量维度，不同模型可能不同
+    api_url: str = ""
     api_key: str = "empty"
+    description: Optional[str] = None
+
+
+class EmbeddingConfig(BaseModel):
+    """Embedding 模型配置 - 支持多渠道切换"""
+    # 当前激活的渠道名称
+    active: str = "default"
+    # 多个渠道配置
+    providers: Dict[str, EmbeddingProviderConfig] = Field(default_factory=lambda: {
+        "default": EmbeddingProviderConfig()
+    })
+    
+    # 向后兼容的单一配置字段 (用于旧配置格式)
+    model: Optional[str] = None
+    dims: Optional[int] = None
+    api_url: Optional[str] = None
+    api_key: Optional[str] = None
+    
+    def get_active_provider(self) -> EmbeddingProviderConfig:
+        """获取当前激活的提供者配置"""
+        # 如果使用新的 providers 格式
+        if self.providers and self.active in self.providers:
+            return self.providers[self.active]
+        
+        # 向后兼容：如果使用旧格式，构建一个 EmbeddingProviderConfig
+        return EmbeddingProviderConfig(
+            model=self.model or "qwen3-embedding-0.6b",
+            dims=self.dims or 1536,
+            api_url=self.api_url or "",
+            api_key=self.api_key or "empty"
+        )
+    
+    def list_providers(self) -> Dict[str, str]:
+        """列出所有可用的渠道及其描述"""
+        return {
+            name: config.description or f"{config.model} ({config.dims}维)"
+            for name, config in self.providers.items()
+        }
 
 
 class KnowledgeBaseConfig(BaseModel):
