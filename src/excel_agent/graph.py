@@ -22,12 +22,13 @@ class AgentState(TypedDict):
 def get_llm():
     """获取 LLM 实例"""
     config = get_config()
+    provider = config.model.get_active_provider()
     return ChatOpenAI(
-        model=config.model.model_name,
-        api_key=config.model.api_key,
-        base_url=config.model.base_url if config.model.base_url else None,
-        temperature=config.model.temperature,
-        max_tokens=config.model.max_tokens,
+        model=provider.model_name,
+        api_key=provider.api_key,
+        base_url=provider.base_url if provider.base_url else None,
+        temperature=provider.temperature,
+        max_tokens=provider.max_tokens,
     )
 
 

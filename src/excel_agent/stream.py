@@ -14,6 +14,33 @@ from .knowledge_base import get_knowledge_base, format_knowledge_context
 from .tools import ALL_TOOLS
 
 
+class CustomJSONEncoder(json.JSONEncoder):
+    """自定义 JSON 编码器，处理 Pandas/Numpy 类型"""
+    
+    def default(self, obj):
+        # 处理 Pandas Timestamp
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        # 处理 numpy 类型
+        if hasattr(obj, 'item'):
+            return obj.item()
+        # 处理 numpy 数组
+        if hasattr(obj, 'tolist'):
+            return obj.tolist()
+        # 处理 pandas NaT
+        if str(obj) == 'NaT':
+            return None
+        # 处理 pandas NA
+        if str(obj) == '<NA>':
+            return None
+        return super().default(obj)
+
+
+def json_dumps(obj, **kwargs):
+    """使用自定义编码器的 JSON 序列化函数"""
+    return json.dumps(obj, cls=CustomJSONEncoder, **kwargs)
+
+
 # 构建工具描述
 TOOLS_DESCRIPTION = """
 ## 可用工具
@@ -120,12 +147,13 @@ SYSTEM_PROMPT_WITH_TOOLS = """你是一个专业的 Excel 数据分析助手。
 def get_llm():
     """获取 LLM 实例"""
     config = get_config()
+    provider = config.model.get_active_provider()
     return ChatOpenAI(
-        model=config.model.model_name,
-        api_key=config.model.api_key,
-        base_url=config.model.base_url if config.model.base_url else None,
-        temperature=config.model.temperature,
-        max_tokens=config.model.max_tokens,
+        model=provider.model_name,
+        api_key=provider.api_key,
+        base_url=provider.base_url if provider.base_url else None,
+        temperature=provider.temperature,
+        max_tokens=provider.max_tokens,
     )
 
 
@@ -220,13 +248,20 @@ async def stream_chat(message: str, history: list = None) -> AsyncGenerator[Dict
         kb = get_knowledge_base()
         if kb:
             try:
+                stats = kb.get_stats()
+                print(f"[知识库] 状态: {stats['total_entries']} 条知识")
                 relevant_knowledge = kb.search(query=message)
+                print(f"[知识库] 检索到 {len(relevant_knowledge)} 条相关知识")
                 if relevant_knowledge:
                     knowledge_context = format_knowledge_context(relevant_knowledge)
                     yield {"type": "thinking", "content": f"找到 {len(relevant_knowledge)} 条相关知识参考..."}
             except Exception as e:
                 # 知识库检索失败不影响主流程
                 print(f"[知识库检索] 警告: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print("[知识库] 未启用或初始化失败")
         
         system_prompt = SYSTEM_PROMPT_WITH_TOOLS.format(
             excel_summary=excel_summary,
@@ -312,7 +347,7 @@ async def stream_chat(message: str, history: list = None) -> AsyncGenerator[Dict
                 }
                 
                 # 将工具结果作为新消息继续对话
-                result_message = f"工具 {tool_name} 执行结果：\n```json\n{json.dumps(tool_result, ensure_ascii=False, indent=2)}\n```\n\n请根据这个结果回答用户的问题。"
+                result_message = f"工具 {tool_name} 执行结果：\n```json\n{json_dumps(tool_result, ensure_ascii=False, indent=2)}\n```\n\n请根据这个结果回答用户的问题。"
                 
                 conversation.append(response)
                 conversation.append(HumanMessage(content=result_message))

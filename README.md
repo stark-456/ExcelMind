@@ -7,6 +7,12 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688)
 ![LangChain](https://img.shields.io/badge/LangChain-Latest-orange)
 
+## 🎬 演示视频
+
+📺 [点击观看演示视频](演示视频.mp4)
+
+> 视频展示了 ExcelMind 的核心功能：自然语言查询、智能联表、知识库检索等
+
 ## ✨ 功能亮点
 
 ### 🎯 核心能力

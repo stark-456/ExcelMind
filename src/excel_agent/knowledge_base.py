@@ -33,7 +33,7 @@ class KnowledgeBase:
     def __init__(self):
         config = get_config()
         self.kb_config = config.knowledge_base
-        self.emb_config = config.embedding
+        self.emb_config = config.embedding.get_active_provider()
         
         # 使用 OpenAI 兼容的 Embedding API
         self.embeddings = OpenAIEmbeddings(
