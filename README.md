@@ -202,19 +202,15 @@ Excel_Agent/
 
 ## 🐳 Docker 部署
 
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY . .
-RUN pip install uv && uv sync
-EXPOSE 8000
-CMD ["uv", "run", "python", "-m", "excel_agent.main", "serve"]
-```
+### Docker example
 
-```bash
-docker build -t excel-agent .
-docker run -p 8000:8000 -e OPENAI_API_KEY=your-key excel-agent
-```
+`mv config.example.yaml /home/docker/excelmind/docker/config.yaml`
+
+`docker build -t excel-agent .`
+
+`docker compose up -d`
+
+visit ip:8000
 
 ## 🔧 开发
 

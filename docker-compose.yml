@@ -1,0 +1,13 @@
+services:
+  excel-agent:
+    image: excel-agent:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - /home/docker/excelmind/docker/data:/app/data
+      - /home/docker/excelmind/docker/logs:/app/logs
+      - /home/docker/excelmind/docker/config.yaml:/app/config.yaml
+    restart: unless-stopped

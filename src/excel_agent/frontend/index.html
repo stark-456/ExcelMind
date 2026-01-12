@@ -1609,9 +1609,12 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>ExcelMind</h1>
+            <h1>ExcelMind</h1>
+            <div style="display: flex; gap: 8px;">
+                <button id="config-toggle" class="theme-toggle-btn" title="配置编辑器">⚙️</button>
                 <button id="theme-toggle" class="theme-toggle-btn" title="切换主题">🌙</button>
             </div>
+        </div>
             <div class="subtitle">Excel 智能数据问答助手</div>
         </div>
 
@@ -1736,11 +1739,39 @@
         </div>
     </div>
 
+    <!-- Configuration Editor Modal -->
+    <div class="modal-overlay" id="config-modal" style="display: none;">
+        <div class="modal" style="max-width: 900px; max-height: 80vh;">
+            <div class="modal-header">
+                <h2>⚙️ 配置编辑器</h2>
+                <button class="modal-close" id="close-config">&times;</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; height: 60vh;">
+                <div style="margin-bottom: 16px; color: var(--text-secondary); font-size: 0.9rem;">
+                    编辑 config.yaml 配置文件。保存后应用将自动重启以应用新配置。
+                </div>
+                <textarea 
+                    id="config-editor" 
+                    style="flex: 1; width: 100%; background: var(--bg-tertiary); 
+                           color: var(--text-primary); border: 1px solid var(--border); 
+                           border-radius: 8px; padding: 12px; font-family: 'Courier New', monospace; 
+                           font-size: 0.9rem; resize: none;"
+                    spellcheck="false"
+                    placeholder="加载配置文件中...">
+                </textarea>
+                <div class="modal-actions" style="margin-top: 16px;">
+                    <button type="button" class="btn-secondary" id="config-cancel">取消</button>
+                    <button type="button" class="btn-primary" id="save-config">保存并重启</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Upload Overlay -->
     <div class="upload-overlay" id="upload-overlay">
         <div class="upload-spinner"></div>
         <div class="upload-overlay-text" id="upload-overlay-text">正在上传...</div>
-        <div class="upload-overlay-sub" id="upload-overlay-sub">请稍候，文件较大时可能需要一些时间</div>
+        <div class="upload-overlay-sub" id="upload-overlay-sub">请稍候</div>
     </div>
 
     <!-- Main Content -->
@@ -3009,6 +3040,80 @@
 
         // Load knowledge entries on page load
         loadKnowledgeEntries();
+
+        // Configuration Editor
+        const configModal = document.getElementById('config-modal');
+        const configToggle = document.getElementById('config-toggle');
+        const configEditor = document.getElementById('config-editor');
+        const saveConfigBtn = document.getElementById('save-config');
+        const closeConfigBtn = document.getElementById('close-config');
+        const cancelConfigBtn = document.getElementById('config-cancel');
+
+        configToggle.addEventListener('click', openConfigModal);
+        closeConfigBtn.addEventListener('click', closeConfigModal);
+        cancelConfigBtn.addEventListener('click', closeConfigModal);
+        saveConfigBtn.addEventListener('click', saveConfig);
+
+        function openConfigModal() {
+            loadConfig();
+            // 显示并添加 show 类以触发可见状态
+            configModal.style.display = 'flex';
+            configModal.classList.add('show');
+        }
+
+        function closeConfigModal() {
+            configModal.classList.remove('show');
+            configModal.style.display = 'none';
+        }
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/config');
+                if (response.ok) {
+                    const config = await response.text();
+                    configEditor.value = config;
+                } else {
+                    configEditor.value = '# 无法加载配置文件';
+                }
+            } catch (error) {
+                configEditor.value = '# 加载配置文件失败: ' + error.message;
+            }
+        }
+
+        async function saveConfig() {
+            const configContent = configEditor.value;
+            
+            try {
+                const response = await fetch('/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/yaml' },
+                    body: configContent
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert('配置保存成功！' + result.message);
+                    closeConfigModal();
+                    
+                    // 刷新页面以应用新配置
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || '保存失败');
+                }
+            } catch (error) {
+                alert('保存配置失败: ' + error.message);
+            }
+        }
+
+        // Close modal when clicking outside
+        configModal.addEventListener('click', (e) => {
+            if (e.target === configModal) {
+                closeConfigModal();
+            }
+        });
     </script>
 </body>
 

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime, date
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Response
+from fastapi import FastAPI, HTTPException, UploadFile, File, Response, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -716,6 +716,94 @@ async def reset_knowledge():
     return {"success": True, "message": "知识库已重置"}
 
 
+# ============ 配置管理 API ============
+
+import yaml
+import os
+import subprocess
+import sys
+
+
+@app.get("/config")
+async def get_config_file():
+    """获取当前配置文件内容"""
+    config = get_config()
+    config_path = config._config_path if hasattr(config, '_config_path') else "config.yaml"
+    
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return Response(content=content, media_type="text/yaml")
+        else:
+            # 返回默认配置结构
+            default_config = {
+                "server": {
+                    "host": "0.0.0.0",
+                    "port": 8000
+                },
+                "llm": {
+                    "provider": "openai",
+                    "model": "gpt-3.5-turbo",
+                    "api_key": "YOUR_API_KEY_HERE"
+                },
+                "knowledge_base": {
+                    "enabled": True,
+                    "knowledge_dir": "knowledge"
+                }
+            }
+            content = yaml.dump(default_config, allow_unicode=True, sort_keys=False)
+            return Response(content=content, media_type="text/yaml")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"读取配置文件失败: {str(e)}")
+
+
+@app.post("/config")
+async def update_config_file(content: str = Body(..., media_type="text/yaml")):
+    """更新配置文件并应用新配置"""
+    config = get_config()
+    config_path = config._config_path if hasattr(config, '_config_path') else "config.yaml"
+    
+    if not content:
+        raise HTTPException(status_code=400, detail="配置内容不能为空")
+    
+    try:
+        # 验证YAML格式
+        new_config_data = yaml.safe_load(content)
+        
+        # 备份原文件
+        backup_path = f"{config_path}.backup"
+        if os.path.exists(config_path):
+            import shutil
+            shutil.copy2(config_path, backup_path)
+        
+        # 写入新配置
+        with open(config_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        # 重新加载配置
+        try:
+            new_config = load_config(config_path)
+            set_config(new_config)
+            
+            # 重置相关组件以应用新配置
+            reset_loader()
+            reset_graph()
+            
+        except Exception as e:
+            # 配置加载失败，恢复备份
+            if os.path.exists(backup_path):
+                shutil.copy2(backup_path, config_path)
+            raise HTTPException(status_code=400, detail=f"配置格式错误: {str(e)}")
+        
+        return {"success": True, "message": "配置已更新并应用，相关组件已重置"}
+        
+    except yaml.YAMLError as e:
+        raise HTTPException(status_code=400, detail=f"YAML格式错误: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"更新配置失败: {str(e)}")
+
+
 def run_server():
     """运行服务器"""
     import uvicorn
@@ -725,4 +813,3 @@ def run_server():
         host=config.server.host,
         port=config.server.port,
     )
-
