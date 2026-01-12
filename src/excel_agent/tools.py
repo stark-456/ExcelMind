@@ -2,6 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
+import json
 import pandas as pd
 from langchain_core.tools import tool
 
@@ -104,6 +105,12 @@ def filter_data(
     df = loader.dataframe.copy()
     
     try:
+        # 处理 JSON 字符串参数
+        if isinstance(filters, str):
+            filters = json.loads(filters)
+        if isinstance(select_columns, str):
+            select_columns = json.loads(select_columns)
+        
         # 初始掩码为全 True
         final_mask = pd.Series([True] * len(df))
         
